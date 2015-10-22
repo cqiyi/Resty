@@ -8,6 +8,7 @@ import cn.dreampie.log.Logger;
 import cn.dreampie.security.credential.Credentials;
 import cn.dreampie.security.sign.CookieSigner;
 import cn.dreampie.security.sign.Signer;
+import cn.dreampie.security.sign.Token;
 
 import java.util.Map;
 
@@ -42,17 +43,15 @@ public class SessionBuilder {
 	 */
 	public Session in(HttpRequest request) {
 		// cqiyi@hotmail.com 2015年9月21日07:45:01
+		// cqiyi：如果request的header中有apikey，则不通过cookies生成
 		String apikey = request.getHeader("apikey");
 		if (apikey == null || "".equals(apikey.trim())) {
 			return buildSession(request);
 		} else {
-			return buildSessionUsingApikey(request);
+			Session session = Token.getSession(apikey);
+			return session != null ? session
+					: getSession(request, emptySession);
 		}
-	}
-
-	private Session buildSessionUsingApikey(HttpRequest request) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
@@ -125,7 +124,6 @@ public class SessionBuilder {
 	 * @return
 	 */
 	private Session buildSession(HttpRequest request) {
-		// TODO cqiyi：如果request的header中有apikey，则不通过cookies生成
 		String sessionCookieName = sessionCookieDescriptor.getCookieName();
 		String cookie = request.getCookieValue(sessionCookieName);
 		if (cookie != null) {
